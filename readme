@@ -1,0 +1,169 @@
+API: 
++) Login ( http:localhost:3030/login )
+    -) request: 
+    {
+        username: USERNAME,
+        password: PASSWORD,
+    }
+    -) response:
+        *account not existed:
+            {
+                message: "account not existed !!",
+            }
+        *wrong password:
+            {
+                message: "message: "password incorrect","
+            }
+        *login successful:
+            {
+                message: "login successfully",
+            }     
+            setCookie automatically
+            {
+                token: JWT,
+            }
+
++) Register ( http: localhost:3030/register )
+    -) request:
+    {
+        username: USERNAME,
+        password: PASSWORD,
+        email: EMAIL,
+    }
+    -) response:
+        *account existed:
+        {
+            message: "account existed"
+        }
+        *register successful:
+        {
+            message: "register successfully"
+        }
+
+////////-------------------------------ADMIN SECTION-------------------------------////////
+
+//-------------CHECK AUTHORITY------------//
+-> response: {
+    *no cookies:
+    {
+        message: "cookies not included !"
+    }
+    *if token is edited:
+    {
+        message: "wrong token"
+    }
+    *if user is not admin:
+    {
+        message: "account not authorized"
+    }
+}
+
+//-------------ADMIN( ACCESSIBLE ONLY AFTER CHECKED AUTHORITY)------------//
++) getProduct ( http: localhost:3030/admin/products)
+    -)request: NONE
+    -)response: (example) {
+         "products": [
+            {
+                "_id": "60117724f08691886951d6c4",
+                "product_name": "shoes",
+                "quantity": 40,
+                "img": "img/photo.jpg",
+                "price": 190000,
+                "description": "gud quantity",
+                "__v": 0
+            },
+            {
+                "_id": "6011783731cb89d45d81f253",
+                "product_name": "shoes",
+                "quantity": 40,
+                "img": "img/photo.jpg",
+                "price": 190000,
+                "description": "gud quantity",
+                "__v": 0
+            },
+            {
+                "_id": "6011783931cb89d45d81f254",
+                "product_name": "shoes",
+                "quantity": 40,
+                "img": "img/photo.jpg",
+                "price": 190000,
+                "description": "gud quantity",
+                "__v": 0
+            }
+        ]
+    }
++) createProduct (localhost:3030/admin/products/create)
+    -)request: (example)
+        {
+            "product_name": "shoes",
+            "quantity": 40,
+            "img": "img/photo.jpg",
+            "price": 190000,
+            "description": "gud quantity"
+        }
+    -)response: (example)
+        {
+            "products": {
+                "_id": "60129be4e17ef039d6a0e4fb",
+                "product_name": "shoes",
+                "quantity": 40,
+                "img": "img/photo.jpg",
+                "price": 190000,
+                "description": "gud quantity",
+                "__v": 0
+            }
+        }   
++) updateProduct (localhost:3030/admin/products/updateOne)  
+    -)request: (example)
+        {
+            "_id": "601174c12a7ca2c045634b8e",
+            "update": {
+                "product_name": "saw",
+                "quantity": 40
+            }
+        } 
+    -)response: (example)
+        * IF UPDATE successfully
+            {
+                "products": {
+                    "_id": "60117724f08691886951d6c4",
+                    "product_name": "saw",
+                    "quantity": 40,
+                    "img": "img/photo.jpg",
+                    "price": 190000,
+                    "description": "gud quantity",
+                    "__v": 0
+                }
+            }
+        * IF UPDATE failed
+            {
+                "products": null
+            }   
+        * IF ID IS NOT A ID OBJECT 
+            {
+                 "err": "error CastError: Cast to ObjectId failed for value \"1\" at path \"_id\" for model \"Products\""
+            }  
+
++) deleteProduct (localhost:3030/admin/products/deleteOne/{ID OF PRODUCT YOU WANT TO DELETE})   
+    -)response: (example)
+        * IF DELETE successfully
+            {
+                "products": {
+                    "n": 1,
+                    "ok": 1,
+                    "deletedCount": 1
+                }
+            }
+        * IF NO PRODUCT DELETED
+            {
+                "products": {
+                    "n": 0,
+                    "ok": 1,
+                    "deletedCount": 0
+                }
+            }
+        * IF ID IS NOT A ID OBJECT 
+           {
+                 "err": "error CastError: Cast to ObjectId failed for value \"1\" at path \"_id\" for model \"Products\""
+            }     
+
