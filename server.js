@@ -51,7 +51,7 @@ app.use('/uploads', express.static('uploads'));
 app.use(cookieParser());
 // 
 route(app);
-const port_number = server.listen(process.env.SERVER_PORT || 3000);
+const port_number = process.env.SERVER_PORT || 3000;
 app.listen(port_number, () => {
     console.log(`Listening on port ${process.env.SERVER_PORT}`)
 })
