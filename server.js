@@ -53,7 +53,7 @@ app.use(cookieParser());
 route(app);
 const port_number = process.env.SERVER_PORT || 3000;
 app.listen(port_number, () => {
-    console.log(`Listening on port ${process.env.SERVER_PORT}`)
+    console.log(`Listening on port ${port_number}`)
 })
 
 // const UserController = require('./controllers/user-controller/userController');
