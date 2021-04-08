@@ -44,7 +44,7 @@ const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 // 
 app.use(cors({
-    origin: true,
+    origin: "http://localhost:3000",
     credentials: true
 }));
 app.use('/uploads', express.static('uploads'));

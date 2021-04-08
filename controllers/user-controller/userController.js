@@ -10,7 +10,7 @@ const encodedToken = (userID, userName) => {
       sub: userID,
       uname: userName,
       iat: new Date().getTime(),
-      exp: new Date().setDate(new Date().getDate() + 3),
+      exp: new Date().setDate(new Date(Date.now() + process.env.COOKIE_LIFE_TIME)),
     },
     process.env.JWT_SCECRET
   );
@@ -21,6 +21,8 @@ class userController {
     this.saltRounds = 10;
     this.register = this.register.bind(this);
     this.login = this.login.bind(this);
+    this.hashPassword = this.hashPassword.bind(this);
+    this.updateUser = this.updateUser.bind(this);
   }
 
   register(req, res) {
@@ -90,6 +92,80 @@ class userController {
     } else {
       return username.username;
     }
+  }
+
+  async getAllUser(req, res) {
+    try {
+      const userDB = await UsersDB.find({}, { password: 0, authority: 0 });
+      res.json(userDB)
+    } catch (err) {
+      res.json({
+        err: err
+      })
+    }
+  }
+
+  async getUser(req, res) {
+    try {
+      const userDB = await UsersDB.findOne({ _id: req.params.id }, { password: 0, authority: 0 });
+      res.json(userDB);
+    } catch (err) {
+      res.json({
+        err: err
+      })
+    }
+  }
+
+  async updateUser(req, res) {
+    try {
+      const { _id } = req.body;
+      const bpass = await this.hashPassword(req.body.password);
+      const updateBody = {};
+      Object.keys(req.body).map((key) => {
+        if (key != '_id' && key != 'password') {
+          updateBody[key] = req.body[key]
+        }
+        if (key == 'password') {
+          console.log("aaa")
+          updateBody[key] = bpass;
+        }
+      })
+      const userDB = await UsersDB.findOneAndUpdate({ _id: _id }, updateBody, {
+        new: true
+      });
+      res.json(userDB)
+    } catch (err) {
+      res.json({
+        err: err
+      })
+    }
+  }
+
+  async deleteUser(req, res) {
+    try {
+      const userDB = await userDB.deleteOne({ _id: req.params.id });
+      if (userDB.n > 0)
+        res.json(userDB)
+      else
+        res.json({
+          err: "no user found"
+        })
+    } catch (err) {
+      res.json({
+        err: err
+      })
+    }
+  }
+
+  async hashPassword(password) {
+    const saltRounds = this.saltRounds;
+    const hashedPassword = await new Promise((resolve, reject) => {
+      bcrypt.hash(password, saltRounds, function (err, hash) {
+        if (err) reject(err)
+        resolve(hash)
+      });
+    })
+    return hashedPassword
   }
 }
 

@@ -16,7 +16,6 @@ class cartManagement {
             res.json({
                 err: `${err}`
             })
-
         }
     }
 
