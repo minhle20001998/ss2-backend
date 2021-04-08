@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const JWT = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const cartManagement = require('../cart-controller/cartManagement');
+const COOKIE_LIFE_TIME = 10000
 const encodedToken = (userID, userName) => {
   return JWT.sign(
     {
@@ -10,7 +11,7 @@ const encodedToken = (userID, userName) => {
       sub: userID,
       uname: userName,
       iat: new Date().getTime(),
-      exp: new Date().setDate(new Date(Date.now() + process.env.COOKIE_LIFE_TIME)),
+      exp: new Date().setDate(new Date(Date.now() + COOKIE_LIFE_TIME)),
     },
     process.env.JWT_SCECRET
   );
@@ -66,7 +67,7 @@ class userController {
       const isSame = await bcrypt.compare(req.body.password, userDB.password);
       if (isSame) {
         const token = encodedToken(userDB._id, userDB.username);
-        res.cookie('login', token, { expires: new Date(Date.now() + process.env.COOKIE_LIFE_TIME) });
+        res.cookie('login', token, { expires: new Date(Date.now() + COOKIE_LIFE_TIME) });
         res.status(201).json({
           message: "login successfully",
         })
