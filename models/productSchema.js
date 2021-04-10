@@ -19,6 +19,9 @@ const ProductSchema = new Schema({
   },
   size: {
     type: Array
+  },
+  gender: {
+    type: Boolean
   }
 
 });
