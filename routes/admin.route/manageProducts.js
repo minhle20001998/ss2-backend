@@ -164,6 +164,6 @@ router.put("/", productManageController.updateProduct);
  *          '401':
  *              description: Unauthorized
  */
-router.delete("/:id", checkAdminAuthority, productManageController.deleteProduct);
+router.delete("/:id", productManageController.deleteProduct);
 
 module.exports = router;
