@@ -2,6 +2,8 @@ const cartSchema = require("../../models/cartSchema");
 const mongoose = require("mongoose");
 const orderSchema = require("../../models/orderSchema");
 const productController = require('../admin-controller/productManage')
+const cartController = require('../cart-controller/cartManagement')
+
 class OrderController {
     async getOrder(req, res) {
 
@@ -32,6 +34,7 @@ class OrderController {
                     totalPayment: await productController.getProductsPrice(cart.products)
                 });
                 let saveOrder = await order.save();
+                cartController.removeProductCart(userID);
                 res.json(saveOrder);
             } catch (err) {
                 res.status(500).send(err);

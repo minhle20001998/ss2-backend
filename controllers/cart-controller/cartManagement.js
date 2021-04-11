@@ -6,6 +6,8 @@ class cartManagement {
         this.validateProductIDs = this.validateProductIDs.bind(this);
         this.createCart = this.createCart.bind(this);
         this.updateCart = this.updateCart.bind(this);
+        this.updateCartByUserID = this.updateCartByUserID.bind(this);
+        this.removeCartForRoute = this.removeCartForRoute.bind(this);
     }
 
     async getCart(req, res) {
@@ -74,6 +76,29 @@ class cartManagement {
         }
     }
 
+    async updateCartByUserID(req, res) {
+        try {
+            const { userID, products } = req.body;
+            const validateProduct = await this.validateProductIDs(products);
+            if (validateProduct.length > 0) {
+                const updatedCart = await cartSchema.findOneAndUpdate({ userID: userID }, {
+                    products: this.toProducts(products, validateProduct)
+                }, {
+                    new: true
+                });
+                res.json(updatedCart)
+            } else {
+                res.json({
+                    err: "Product out of stock"
+                })
+            }
+        } catch (err) {
+            if (res) {
+                res.status(500).send(err);
+            }
+        }
+    }
+
     async deleteCart(req, res) {
         try {
             const deleteCart = await cartSchema.deleteOne({ _id: req.params.id });
@@ -90,23 +115,31 @@ class cartManagement {
         }
     }
 
-    async deleteProductCart(req, res) {
+    async removeCartForRoute(req, res) {
+        const { id } = req.params;
+        const result = await this.removeProductCart(id);
+        if (result) {
+            res.json(result)
+        } else {
+            res.json('err')
+        }
+    }
+
+    async removeProductCart(id) {
         try {
-            const { id } = req.params;
-            const cart = await cartSchema.findOneAndUpdate({ _id: id }, {
+            const cart = await cartSchema.findOneAndUpdate({ userID: id }, {
                 products: []
             }, {
                 new: true
             })
-            res.json(cart);
+            return cart;
         } catch (err) {
-            if (res) {
-                res.status(500).send(err);
-            }
+            return null;
         }
     }
 
     validateProductIDs(products) {
+        console.log(products)
         const results = [];
         return Promise.all(products.map(p => {
             const queryResult = productSchema.findOne({ _id: p.id }).where('quantity').gt(p.quantity);

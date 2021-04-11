@@ -25,8 +25,10 @@ const checkIfCartExist = require('../../middlewares/validateData');
 router.get('/', cartController.getAllCart);
 router.get('/:id', cartController.getCart);
 router.post('/', checkIfCartExist.checkIfCartExist, cartController.createCart);
+router.put('/user', cartController.updateCartByUserID);
 router.put('/', cartController.updateCart);
-router.delete('/:id', cartController.deleteProductCart);
+
+router.delete('/:id', cartController.removeCartForRoute);
 
 
 
