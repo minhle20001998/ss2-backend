@@ -34,6 +34,9 @@ const upload = multer({
     fileFilter: fileFilter
 });
 
+
+router.get("/count", productManageController.getCount);
+
 /**
  * @swagger
  * tags:
@@ -113,6 +116,8 @@ router.get("/:id", productManageController.getProduct);
  *              description: Unauthorized
  */
 router.post("/", upload.array('productImage'), productManageController.createProduct);
+router.post("/image", upload.array('productImage'), productManageController.returnImage);
+
 /**
  * @swagger
  * /product:
@@ -165,5 +170,6 @@ router.put("/", productManageController.updateProduct);
  *              description: Unauthorized
  */
 router.delete("/:id", productManageController.deleteProduct);
+
 
 module.exports = router;

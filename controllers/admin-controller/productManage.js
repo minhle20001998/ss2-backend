@@ -32,24 +32,35 @@ class manageProductController {
     }
   }
 
+  returnImage(req, res) {
+    if (req.files) {
+      const files = []
+      req.files.map(file => {
+        files.push(file.path)
+      })
+      res.json(files)
+    }
+  }
 
   //create a product
   createProduct(req, res) {
-    const { colors, product_name, quantity, price, description, size } = req.body;
+    const { colors, product_name, quantity, price, description, size, gender } = req.body;
     const color_and_images = [];
+    console.log(colors)
     if (req.files) {
       req.files.map((image, index) => {
-        color_and_images.push({ image: image.path, color: colors[index] })
+        color_and_images.push({ image: image.path, color: (typeof colors === "string") ? colors : colors[index] })
       })
     }
     const product = new productSchema({
       _id: new mongoose.Types.ObjectId().toHexString(),
-      product_name: req.body.product_name,
-      quantity: req.body.quantity,
+      product_name: product_name,
+      quantity: quantity,
       colors: color_and_images,
-      price: req.body.price,
-      description: req.body.description,
-      size: req.body.size
+      price: price,
+      description: description,
+      size: size,
+      gender: gender
     });
     product.save().then((result) => {
       res.json(result)
@@ -61,8 +72,11 @@ class manageProductController {
   }
   //update a product
   async updateProduct(req, res) {
+    let { colors } = req.body;
+    let data = req.body
+    data.colors = colors.filter(el => el.color.length > 0)
     try {
-      const updatedProduct = await productSchema.findOneAndUpdate({ _id: req.body._id }, req.body, {
+      const updatedProduct = await productSchema.findOneAndUpdate({ _id: req.body._id }, data, {
         new: true
       })
       res.json(updatedProduct)
@@ -109,6 +123,22 @@ class manageProductController {
     })
     console.log("total", totalPrice)
     return totalPrice;
+  }
+
+  async getProductName(id) {
+    const productDB = await productSchema.findOne({ _id: id });
+    if (productDB) {
+      return productDB.product_name;
+    } else {
+      return null;
+    }
+  }
+
+  async getCount(req, res) {
+    const productDB = await productSchema.find({});
+    res.json({
+      product: productDB.length
+    })
   }
 }
 

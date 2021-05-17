@@ -4,6 +4,7 @@ const orderController = require('../../controllers/order-controller/orderControl
 const checkCustomerAuthority = require('../../middlewares/checkAuthority');
 const checkIfCartExist = require('../../middlewares/validateData');
 
+router.get('/count', orderController.getCount);
 router.get('/', orderController.getAllOrders);
 // router.get('/:id', cartController.getCart);
 router.post('/', orderController.createOrder);

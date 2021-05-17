@@ -2,6 +2,17 @@ const mongoose = require("mongoose");
 const commentSchema = require("../../models/commentSchema");
 const userController = require('../user-controller/userController')
 class OrderController {
+    async getCount(req, res) {
+        try {
+            const comments = await commentSchema.find({});
+            res.json({
+                comment: comments.length
+            })
+        } catch (err) {
+            res.status(500).send(err);
+        }
+    }
+
     async getAllComments(req, res) {
         const { id } = req.params;
         try {
@@ -14,9 +25,10 @@ class OrderController {
 
     // create comment 
     async createComment(req, res) {
+        console.log(req.body)
         const { userID, productID, content } = req.body;
         // get username;
-        const username = await userController.getUserName(req, res, userID);
+        const username = await userController.getUserNameByID(userID);
         if (username) {
             try {
                 const comment = new commentSchema({
@@ -32,6 +44,8 @@ class OrderController {
             } catch (err) {
                 res.status(500).send(err);
             }
+        }else{
+            res.status(404)
         }
     }
 

@@ -1,8 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const commentController = require('../../controllers/comment-controller/commentController');
-const {checkIfProduct} = require('../../middlewares/validateData');
+const { checkIfProduct } = require('../../middlewares/validateData');
 
+router.get('/count', commentController.getCount);
 router.get('/:id', commentController.getAllComments);
 router.post('/', checkIfProduct, commentController.createComment);
 router.put('/', commentController.updateComment);

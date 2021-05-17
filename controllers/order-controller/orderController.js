@@ -3,20 +3,46 @@ const mongoose = require("mongoose");
 const orderSchema = require("../../models/orderSchema");
 const productController = require('../admin-controller/productManage')
 const cartController = require('../cart-controller/cartManagement')
-
+const userController = require('../user-controller/userController')
 class OrderController {
     async getOrder(req, res) {
 
     }
 
-    async getAllOrders(req, res) {
+    async getCount(req, res) {
         try {
             const orderDB = await orderSchema.find({});
+            res.json({
+                order: orderDB.length
+            })
+        } catch (err) {
+            res.json(err)
+
+        }
+    }
+
+    async getAllOrders(req, res) {
+        try {
+            const orderDB = JSON.parse(JSON.stringify(await orderSchema.find({})))
+            const orderUsername = [];
+            const orderProducts = [];
+            orderDB.map(order => {
+                orderUsername.push(userController.getUserNameByID(order.userID))
+                order.products.map(product => {
+                    orderProducts.push(productController.getProductName(product.id))
+                })
+            })
+            const result = await Promise.all(orderUsername);
+            const resultProduct = await Promise.all(orderProducts);
+            orderDB.map((order, index) => {
+                orderDB[index].username = result[index]
+                order.products.map((product, i) => {
+                    orderDB[index].products[i].product_name = resultProduct.shift();
+                })
+            })
             res.json(orderDB)
         } catch (err) {
-            res.json({
-                err: `${err}`
-            })
+            res.json(err)
 
         }
     }
@@ -34,7 +60,7 @@ class OrderController {
                     totalPayment: await productController.getProductsPrice(cart.products)
                 });
                 let saveOrder = await order.save();
-                cartController.removeProductCart(userID);
+                cartController.removeAllProductCart(userID);
                 res.json(saveOrder);
             } catch (err) {
                 res.status(500).send(err);

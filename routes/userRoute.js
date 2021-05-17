@@ -6,7 +6,10 @@ const userController = require('../controllers/user-controller/userController');
 
 router.post('/register', middlewares.checkRegister, userController.register);
 router.post('/login', userController.login);
+// router.post('/login/admin', userController.login);
+
 // 
+router.get('/user/count', userController.getCountUser);
 router.get('/user', userController.getAllUser);
 router.get('/user/:id', userController.getUser);
 router.put('/user', userController.updateUser);

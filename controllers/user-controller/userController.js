@@ -3,15 +3,16 @@ const mongoose = require("mongoose");
 const JWT = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const cartManagement = require('../cart-controller/cartManagement');
-const COOKIE_LIFE_TIME = 100000;
+const COOKIE_LIFE_TIME = 1000000;
 const cookie = require('cookie');
-const encodedToken = (userID, userName) => {
+const encodedToken = (userID, userName, auth) => {
   return JWT.sign(
     {
       iss: "Minh Le",
       sub: userID,
       uname: userName,
       iat: new Date().getTime(),
+      auth: auth,
       exp: new Date().setDate(new Date(Date.now() + COOKIE_LIFE_TIME)),
     },
     process.env.JWT_SCECRET
@@ -39,24 +40,13 @@ class userController {
         });
         const saveUser = await user.save();
         if (saveUser) {
-          console.log(saveUser)
-          cartManagement.createCart({
-            body: {
-              userID: saveUser._id
-            }
-          });
-          res.json({
-            message: "register successfully"
-          })
+          cartManagement.createCart({ body: { userID: saveUser._id } });
+          res.json({ message: "register successfully" })
         } else {
-          res.json({
-            err: "error"
-          })
+          res.json({ err: "error" })
         }
       } catch (err) {
-        res.json({
-          message: `${Object.keys(err.keyPattern)[0]} is existed`
-        })
+        res.json({ message: `${Object.keys(err.keyPattern)[0]} is existed` })
       }
     })
 
@@ -67,11 +57,20 @@ class userController {
       const userDB = await UsersDB.findOne({ username: `${req.body.username}` });
       const isSame = await bcrypt.compare(req.body.password, userDB.password);
       if (isSame) {
-        const token = encodedToken(userDB._id, userDB.username);
-        res.cookie('login', token, { expires: new Date(Date.now() + COOKIE_LIFE_TIME) });
-        res.status(201).json({
-          message: "login successfully",
-        })
+        if (userDB.authority === 'client') {
+          const token = encodedToken(userDB._id, userDB.username, "client");
+          res.cookie('login', token, { expires: new Date(Date.now() + COOKIE_LIFE_TIME) });
+          res.status(201).json({
+            message: "login successfully",
+          })
+        } else {
+          const token = encodedToken(userDB._id, userDB.username, "admin");
+          res.cookie('login', token, { expires: new Date(Date.now() + COOKIE_LIFE_TIME) });
+          res.status(201).json({
+            message: "login successfully",
+            admin: true
+          })
+        }
       } else {
         res.json({
           message: "password incorrect",
@@ -84,21 +83,53 @@ class userController {
     }
   }
 
+
+  // async loginAdmin(req, res) {
+  //   try {
+  //     const userDB = await UsersDB.findOne({ username: `${req.body.username}` });
+  //     const isSame = await bcrypt.compare(req.body.password, userDB.password);
+
+  //   } catch (err) {
+  //     res.json({
+  //       message: err
+  //     })
+  //   }
+  // }
+
   async getUserName(req, res, id) {
     const username = await UsersDB.findOne({ _id: id });
     if (!username) {
-      res.json({
-        err: "user not found"
-      })
+      res.json({ err: "user not found" })
       return null;
-    } else {
+    } else { return username.username; }
+
+  }
+
+
+  async getUserNameByID(id) {
+    const username = await UsersDB.findOne({ _id: id });
+    if (username) {
       return username.username;
+    } else {
+      return null;
     }
+  }
+
+  async getCountUser(req, res) {
+    try {
+      const userDB = await UsersDB.find({});
+      res.json({
+        user: userDB.length
+      })
+    } catch (err) {
+      res.json(err)
+    }
+
   }
 
   async getAllUser(req, res) {
     try {
-      const userDB = await UsersDB.find({}, { password: 0, authority: 0 });
+      const userDB = await UsersDB.find({ authority: { $ne: 'admin' } }, { password: 0, authority: 0 });
       res.json(userDB)
     } catch (err) {
       res.json({
@@ -145,17 +176,14 @@ class userController {
 
   async deleteUser(req, res) {
     try {
-      const userDB = await userDB.deleteOne({ _id: req.params.id });
-      if (userDB.n > 0)
+      const userDB = await UsersDB.deleteOne({ _id: req.params.id });
+      if (userDB.n > 0) {
+        cartManagement.deleteCart(req.params.id);
         res.json(userDB)
-      else
-        res.json({
-          err: "no user found"
-        })
+      }
+      else { res.json(null) }
     } catch (err) {
-      res.json({
-        err: err
-      })
+      res.json({ err: err })
     }
   }
 
@@ -169,6 +197,9 @@ class userController {
     })
     return hashedPassword
   }
+
+
+
 }
 
 module.exports = new userController();

@@ -7,12 +7,12 @@ class cartManagement {
         this.createCart = this.createCart.bind(this);
         this.updateCart = this.updateCart.bind(this);
         this.updateCartByUserID = this.updateCartByUserID.bind(this);
-        this.removeCartForRoute = this.removeCartForRoute.bind(this);
+        this.removeAllProductCartForRoute = this.removeAllProductCartForRoute.bind(this);
     }
 
     async getCart(req, res) {
         try {
-            const cart = await cartSchema.findOne({ _id: req.params.id });
+            const cart = await cartSchema.findOne({ userID: req.params.id });
             res.json(cart);
         } catch (err) {
             res.json({
@@ -80,17 +80,19 @@ class cartManagement {
         try {
             const { userID, products } = req.body;
             const validateProduct = await this.validateProductIDs(products);
-            if (validateProduct.length > 0) {
+            if (validateProduct.length > 0 && await this.checkDuplicateCart(userID, products)) {
                 const updatedCart = await cartSchema.findOneAndUpdate({ userID: userID }, {
                     products: this.toProducts(products, validateProduct)
                 }, {
                     new: true
                 });
                 res.json(updatedCart)
-            } else {
-                res.json({
-                    err: "Product out of stock"
-                })
+            }
+            else if (validateProduct.length <= 0) {
+                res.status(404).json("Product out of stock")
+            }
+            else if (! await this.checkDuplicateCart(userID, products)) {
+                res.status(409).json("duplicated !")
             }
         } catch (err) {
             if (res) {
@@ -98,6 +100,45 @@ class cartManagement {
             }
         }
     }
+
+    async checkDuplicateCart(userID, products) {
+        const newestProduct = products[products.length - 1];
+        let result = true;
+        try {
+            const cart = await cartSchema.findOne({ userID: userID });
+            cart.products.every(p => {
+                if (p.id === newestProduct.id) {
+                    result = false;
+                    return false;
+                }
+                return true;
+            })
+            return result;
+        } catch (err) {
+            return null
+        }
+    }
+
+    // async updateCartProduct(req, res) {
+    //     try {
+    //         const { userID, product } = req.body;
+    //         const validateProduct = await this.validateProductIDs([products]);
+    //         if (validateProduct.length > 0) {
+    //             const thisCart = await cartSchema.findOne({ userID: userID });
+    //             thisCart.products.push(product);
+    //             const updateCart = await cartSchema.findOneAndUpdate({ userID: userID }, {
+    //                 products: this.toProducts(thisCart.products, validateProduct)
+    //             }, {
+    //                 new: true
+    //             });
+    //             res.json(updatedCart)
+    //         }
+    //     } catch (err) {
+    //         if (res) {
+    //             res.status(500).send(err);
+    //         }
+    //     }
+    // }
 
     async deleteCart(req, res) {
         try {
@@ -115,9 +156,9 @@ class cartManagement {
         }
     }
 
-    async removeCartForRoute(req, res) {
+    async removeAllProductCartForRoute(req, res) {
         const { id } = req.params;
-        const result = await this.removeProductCart(id);
+        const result = await this.removeAllProductCart(id);
         if (result) {
             res.json(result)
         } else {
@@ -125,7 +166,7 @@ class cartManagement {
         }
     }
 
-    async removeProductCart(id) {
+    async removeAllProductCart(id) {
         try {
             const cart = await cartSchema.findOneAndUpdate({ userID: id }, {
                 products: []
@@ -138,8 +179,36 @@ class cartManagement {
         }
     }
 
+    async removeProductCartRoute(req, res) {
+        try {
+            const { userID, productID } = req.body;
+            console.log(userID)
+            const cart = await cartSchema.findOne({ userID: userID });
+            const newProducts = cart.products.filter(product => product.id != productID);
+            console.log(newProducts)
+            const newCart = await cartSchema.findOneAndUpdate({ userID: userID }, {
+                products: newProducts
+            }, {
+                new: true
+            })
+            res.json(newCart);
+        } catch (err) {
+            console.log(err)
+            res.json(err);
+        }
+    }
+
+    async deleteCart(id) {
+        try {
+            const cart = await cartSchema.deleteOne({ userID: id });
+            return cart;
+        }
+        catch (err) {
+            return null
+        }
+    }
+
     validateProductIDs(products) {
-        console.log(products)
         const results = [];
         return Promise.all(products.map(p => {
             const queryResult = productSchema.findOne({ _id: p.id }).where('quantity').gt(p.quantity);
@@ -152,12 +221,13 @@ class cartManagement {
             });
             return results
         })
-
     }
 
     toProducts(product, ids) {
         return product.filter(value => ids.includes(value.id));
     }
+
+
 }
 
 module.exports = new cartManagement();
