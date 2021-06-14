@@ -1,4 +1,6 @@
 const UsersDB = require("../../models/usersSchema");
+const OrdersDB = require("../../models/orderSchema");
+
 const mongoose = require("mongoose");
 const JWT = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
@@ -159,7 +161,6 @@ class userController {
           updateBody[key] = req.body[key]
         }
         if (key == 'password') {
-          console.log("aaa")
           updateBody[key] = bpass;
         }
       })
@@ -198,7 +199,35 @@ class userController {
     return hashedPassword
   }
 
+  async getUserOrder(req, res) {
+    const { id } = req.params;
+    try {
+      const userOrders = await OrdersDB.find({ userID: id })
+      res.json(userOrders);
+    } catch (error) {
+      res.json(error)
+    }
+  }
 
+  async updateUserInfo(req, res) {
+    const { id } = req.params;
+    const { email, address, phoneNumber } = req.body;
+    try {
+      const userInfo = await UsersDB.updateOne({ _id: id },
+        {
+          $set: {
+            "contacts": {
+              "email": email,
+              "address": address,
+              "phoneNumber": phoneNumber
+            }
+          }
+        });
+      (userInfo.n > 0 ? res.status(200).json("ok") : res.status(404).json("not ok"))
+    } catch (error) {
+      res.json(error);
+    }
+  }
 
 }
 

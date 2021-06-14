@@ -12,7 +12,10 @@ router.post('/login', userController.login);
 router.get('/user/count', userController.getCountUser);
 router.get('/user', userController.getAllUser);
 router.get('/user/:id', userController.getUser);
+router.get('/user/orders/:id', userController.getUserOrder);
 router.put('/user', userController.updateUser);
+router.put('/user/:id', userController.updateUserInfo);
+
 router.delete('/user/:id', userController.deleteUser);
 
 

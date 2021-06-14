@@ -15,9 +15,7 @@ class cartManagement {
             const cart = await cartSchema.findOne({ userID: req.params.id });
             res.json(cart);
         } catch (err) {
-            res.json({
-                err: `${err}`
-            })
+            res.json({ err: `${err}` })
         }
     }
 
@@ -26,9 +24,7 @@ class cartManagement {
             const allCarts = await cartSchema.find({});
             res.json(allCarts);
         } catch (err) {
-            res.json({
-                err: `${err}`
-            })
+            res.json({ err: `${err}` })
 
         }
     }

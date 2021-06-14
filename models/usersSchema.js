@@ -14,9 +14,14 @@ const UsersSchema = new Schema({
         email: {
             type: String,
             unique: true,
+        },
+        address: {
+            type: String,
+        },
+        phoneNumber: {
+            type: String
         }
     },
-    avatar: String,
 });
 
 module.exports = mongoose.model('Users', UsersSchema);
